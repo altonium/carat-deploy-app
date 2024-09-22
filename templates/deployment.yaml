@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.service.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.service.name }}
+    spec:
+      imagePullSecrets:
+      - name: regcred  # Reference the secret created above
+      initContainers:
+      - name: init-permissions
+        image: docker.io/alpine:latest
+        command: ["sh", "-c"]
+        args:
+          - chmod 755 /app/logs && chown root:root /app/logs
+        volumeMounts:
+          - name: logs
+            mountPath: /app/logs
+      containers:
+      - name: {{ .Values.service.name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.app.port }} 
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs   # NestJS writes logs to /app/logs
+        env:
+        - name: DATABASE_HOST
+          value: "{{ .Values.env.DATABASE_HOST }}"
+        - name: DATABASE_PORT
+          value: "{{ .Values.env.DATABASE_PORT }}"
+        - name: DATABASE_USER
+          value: "{{ .Values.env.DATABASE_USER }}"
+        - name: DATABASE_NAME
+          value: "{{ .Values.env.DATABASE_NAME }}"
+        - name: DATABASE2_HOST
+          value: "{{ .Values.env.DATABASE2_HOST }}"
+        - name: DATABASE2_PORT
+          value: "{{ .Values.env.DATABASE2_PORT }}"
+        - name: DATABASE2_USER
+          value: "{{ .Values.env.DATABASE2_USER }}"
+        - name: DATABASE2_NAME
+          value: "{{ .Values.env.DATABASE2_NAME }}"
+        - name: REDIS_HOST
+          value: "{{ .Values.env.REDIS_HOST }}"
+        - name: REDIS_PORT
+          value: "{{ .Values.env.REDIS_PORT }}"
+        - name: REDIS2_HOST
+          value: "{{ .Values.env.REDIS_HOST }}"
+        - name: REDIS2_PORT
+          value: "{{ .Values.env.REDIS_PORT }}"
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: DATABASE_PASSWORD
+        - name: DATABASE2_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: DATABASE2_PASSWORD
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: REDIS_PASSWORD
+        - name: REDIS2_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: REDIS2_PASSWORD
+        - name: HASH_SALT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: HASH_SALT
+
+      - name: promtail
+        image: grafana/promtail:2.8.0
+        args:
+          - -config.file=/etc/promtail/config.yml
+        volumeMounts:
+          - name: logs
+            mountPath: /app/logs    # Promtail reads logs from /app/logs (same directory)
+          - name: {{ .Values.service.name }}-promptail-config
+            mountPath: /etc/promtail
+        env:
+          - name: LOKI_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Values.service.name }}-promptail-config
+                key: loki-url   # Loki URL from the config map
+
+      - name: logrotate
+        image: docker.io/alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - apk add --no-cache logrotate;
+            logrotate -f /etc/logrotate.d/logrotate.conf;
+            sleep 86400;
+        volumeMounts:
+          - name: logs
+            mountPath: /app/logs  # Logrotate works on the same log files
+          - name: {{ .Values.service.name }}-logrotate-config
+            mountPath: /etc/logrotate.d/
+      volumes:
+      - name: logs
+        emptyDir: {}                 # Shared volume for logs between NestJS, Promtail, and Logrotate
+      - name: {{ .Values.service.name }}-promptail-config
+        configMap:
+          name: {{ .Values.service.name }}-promptail-config    # ConfigMap for Promtail config
+      - name: {{ .Values.service.name }}-logrotate-config
+        configMap:
+          name: {{ .Values.service.name }}-logrotate-config    # ConfigMap for Logrotate config

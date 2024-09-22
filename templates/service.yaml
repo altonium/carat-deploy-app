@@ -1,0 +1,12 @@
+# templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.app.port }} 
+  selector:
+    app: {{ .Values.service.name }}

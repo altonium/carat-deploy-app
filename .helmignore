@@ -1,0 +1,6 @@
+# .helmignore
+*.DS_Store
+*.git
+*.svn
+*.tgz
+*.bak

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.service.name }}-logrotate-config
+  namespace: {{ .Values.namespace }}
+data:
+  logrotate.conf: |
+    /app/logs/*.log {
+      rotate 10
+      daily
+      size 100M
+      compress
+      delaycompress
+      missingok
+      notifempty
+      copytruncate
+      create 0644 root root
+    }

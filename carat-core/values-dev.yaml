@@ -1,0 +1,40 @@
+# values.yaml
+namespace: carat-dev
+image:
+  # repository: $DOCKER_ACCOUNT/$IMAGE_NAME
+  repository: altonium/carat-core-dev
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  name: carat-core-dev
+  type: ClusterIP
+  port: 80
+
+log:
+  jobname: carat-core-dev
+
+app:
+  port: 3000  # Internal port where NestJS is running
+
+env:
+  DATABASE_HOST: "10.8.200.181"
+  DATABASE_PORT: "5432"
+  DATABASE_USER: "kilua"
+  DATABASE_NAME: "carat-dev"
+
+  DATABASE2_HOST: "10.8.200.181"
+  DATABASE2_PORT: "5432"
+  DATABASE2_USER: "kilua"
+  DATABASE2_NAME: "carat-dev"
+
+  REDIS_HOST: "10.8.200.182"
+  REDIS_PORT: "6379"
+
+  REDIS2_HOST: "10.8.200.182"
+  REDIS2_PORT: "6379"
+
+
+secretName: carat-dev-secrets
+
+resources: {}
