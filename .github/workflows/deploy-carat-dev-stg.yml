@@ -1,5 +1,5 @@
-name: ${{ github.event.inputs.DEPLOY_APP_ENV }} to ${{ github.event.inputs.DEPLOY_ENV }} (${github.event.inputs.DOCKER_IMAGE_SHA || 'default'})
-
+name: Deploy Carat Dev/Stg
+run-name: ${{ github.event.inputs.DEPLOY_APP_ENV }} to ${{ github.event.inputs.DEPLOY_ENV }} (${github.event.inputs.DOCKER_IMAGE_SHA || 'default'})
 on:
   workflow_dispatch:
     inputs:
