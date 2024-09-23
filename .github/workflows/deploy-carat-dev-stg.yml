@@ -61,6 +61,7 @@ jobs:
           SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
           # Remove the "sha256:" prefix if present
           CLEAN_SHA=$(echo "$SHA" | sed 's/^sha256://')
+          echo "CLEAN_SHA: $CLEAN_SHA"
           # Fetching the manifest by SHA to check its validity
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
