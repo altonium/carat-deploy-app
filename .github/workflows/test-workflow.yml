@@ -6,7 +6,7 @@ on:
       DEPLOY_APP_ENV:
         description: 'Deployment application'
         required: true
-        default: 'dev'
+        default: 'carat-dash-be'
         type: choice
         options:
           - carat-core
@@ -19,9 +19,21 @@ on:
         options:
           - dev
           - stg
+      DOCKER_IMAGE_SHA:
+        description: 'Docker image SHA (optional)'
+        required: false
+        default: ''
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to environment
-        run: echo "Deploying to ${{ github.event.inputs.DEPLOY_ENV }} environment"
+        run: |
+          echo "Deploying to ${{ github.event.inputs.DEPLOY_ENV }} environment"
+          echo "Deploying application ${{ github.event.inputs.DEPLOY_APP_ENV }}"
+          if [ -n "${{ github.event.inputs.DOCKER_IMAGE_SHA }}" ]; then
+            echo "Using Docker image SHA: ${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+          else
+            echo "No Docker image SHA provided, using default image."
+          fi
