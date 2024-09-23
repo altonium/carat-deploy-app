@@ -56,7 +56,8 @@ jobs:
       - name: Check Docker image SHA validity
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
         run: |
-          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}"
+          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
+          echo "Repository name: $REPO"
           SHA=${{ github.event.inputs.DOCKER_IMAGE_SHA }}
           # Fetching the manifest by SHA to check its validity
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
