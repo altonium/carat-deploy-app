@@ -1,5 +1,5 @@
 name: Deploy Carat Dev/Stg
-run-name: ${{ github.event.inputs.DEPLOY_APP_ENV }} to ${{ github.event.inputs.DEPLOY_ENV }} (${github.event.inputs.DOCKER_IMAGE_SHA || 'default'})
+run-name: ${{ github.event.inputs.DEPLOY_APP_ENV }} to ${{ github.event.inputs.DEPLOY_ENV }}  ${github.event.inputs.DOCKER_IMAGE_SHA || 'latest'}
 on:
   workflow_dispatch:
     inputs:
@@ -22,7 +22,7 @@ on:
       DOCKER_IMAGE_SHA:
         description: 'Docker image SHA (optional)'
         required: false
-        default: ''
+        default: 'latest'
 
 jobs:
   deploy:
