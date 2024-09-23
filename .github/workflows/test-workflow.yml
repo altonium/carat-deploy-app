@@ -3,6 +3,14 @@ name: Manual Trigger Workflow
 on:
   workflow_dispatch:
     inputs:
+      DEPLOY_APP_ENV:
+        description: 'Deployment application'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - carat-core
+          - carat-dash-be
       DEPLOY_ENV:
         description: 'Deployment environment'
         required: true
@@ -10,9 +18,7 @@ on:
         type: choice
         options:
           - dev
-          - staging
-          - prod
-
+          - stg
 jobs:
   deploy:
     runs-on: ubuntu-latest
