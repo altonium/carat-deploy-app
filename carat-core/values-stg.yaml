@@ -2,8 +2,7 @@
 namespace: carat-stg
 image:
   # repository: $DOCKER_ACCOUNT/$IMAGE_NAME
-  repository: altonium/carat-core
-  tag: "latest"
+  repository_ref: "altonium/carat-core-stg:latest"
   pullPolicy: Always
 
 service:
