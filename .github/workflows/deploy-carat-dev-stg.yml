@@ -59,32 +59,34 @@ jobs:
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      - name: Verify Docker image using SHA
+      - name: Verify Docker image using SHA and trap "Pulling from ..."
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
         run: |
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
           SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
-          echo "Checking Docker image with SHA: $SHA"
-          # Verify that the image exists by pulling its manifest
-          if docker manifest inspect $REPO@$SHA > /dev/null; then
-            echo "Docker image with SHA $SHA is valid."
+          echo "Pulling Docker image with SHA: $SHA"
+          OUTPUT=$(docker pull --platform linux/amd64 $REPO@$SHA 2>&1 | tee /dev/tty)
+          if echo "$OUTPUT" | grep -q "Pulling from"; then
+            echo "Docker image with SHA $SHA is being pulled."
             echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
+            kill $! 2>/dev/null || true  # Safely attempt to cancel the pull
           else
             echo "Error: Docker image with SHA $SHA not found."
             exit 1
           fi
 
-      - name: Verify Docker image using tag
+      - name: Verify Docker image using tag and trap "Pulling from ..."
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA == '' }}
         run: |
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
           TAG="${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
-          echo "Checking Docker image with tag: $TAG"
-          # Verify that the image exists by pulling its manifest
-          if docker manifest inspect $REPO:$TAG > /dev/null; then
+          echo "Pulling Docker image with tag: $TAG"
+          OUTPUT=$(docker pull --platform linux/amd64 $REPO:$TAG 2>&1 | tee /dev/tty)
+          if echo "$OUTPUT" | grep -q "Pulling from"; then
             DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $REPO:$TAG | sed 's/.*@//')
-            echo "Docker image with tag $TAG is valid."
+            echo "Docker image with tag $TAG is being pulled."
             echo "IMAGE_REF=$DIGEST" >> $GITHUB_ENV
+            kill $! 2>/dev/null || true  # Safely attempt to cancel the pull
           else
             echo "Error: Docker image with tag $TAG not found."
             exit 1
