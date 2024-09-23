@@ -108,5 +108,5 @@ jobs:
         run: |
           helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
             -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
-            --set image.repository_ref=${{ env.IMAGE_REF }} \
+            --set image.repository_ref=altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}@${{ env.IMAGE_REF }} \
             -n carat-${{ github.event.inputs.DEPLOY_ENV }}
