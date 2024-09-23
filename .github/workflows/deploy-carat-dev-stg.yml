@@ -53,24 +53,26 @@ jobs:
         run: |
           kubectl get nodes
 
-      - name: Check Docker image SHA validity
-        if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
-        run: |
-          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
-          echo "Repository name: $REPO"
-          SHA=${{ github.event.inputs.DOCKER_IMAGE_SHA }}
-          # Fetching the manifest by SHA to check its validity
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/$SHA")
-
-          if [ "$RESPONSE" -ne 200 ]; then
-            echo "Error: Docker image with SHA $SHA not found in repository $REPO."
-            exit 1
-          else
-            echo "Docker image with SHA $SHA is valid."
-            echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
-          fi
+          - name: Check Docker image SHA validity
+          if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
+          run: |
+            REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
+            echo "Repository name: $REPO"
+            SHA=${{ github.event.inputs.DOCKER_IMAGE_SHA }}
+            # Remove the "sha256:" prefix if present
+            CLEAN_SHA=$(echo "$SHA" | sed 's/^sha256://')
+            # Fetching the manifest by SHA to check its validity
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
+              -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+              "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/$CLEAN_SHA")
+  
+            if [ "$RESPONSE" -ne 200 ]; then
+              echo "Error: Docker image with SHA $SHA not found in repository $REPO."
+              exit 1
+            else
+              echo "Docker image with SHA $SHA is valid."
+              echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
+            fi
 
       - name: Set Docker image reference
         id: docker-image
