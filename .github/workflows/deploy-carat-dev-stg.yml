@@ -54,21 +54,35 @@ jobs:
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Verify Docker image using SHA and trap "Pulling from ..."
+      - name: Check for SHA and Tag
+        run: |
+          if [ -z "${{ github.event.inputs.DOCKER_IMAGE_SHA }}" ] && [ -z "${{ github.event.inputs.DOCKER_IMAGE_TAG }}" ]; then
+            echo "Error: Both SHA and Tag are empty. Exiting."
+            exit 1
+          fi
+
+      - name: Verify Docker image using tag and retrieve SHA digest
+        if: ${{ github.event.inputs.DOCKER_IMAGE_SHA == '' }}
+        run: |
+          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
+          TAG="${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
+          echo "Pulling Docker image with tag: $TAG"
+          docker pull --platform linux/amd64 $REPO:$TAG
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $REPO:$TAG | sed 's/.*@//')
+          if [ -z "$DIGEST" ]; then
+            echo "Error: Could not retrieve SHA digest for tag $TAG."
+            exit 1
+          fi
+          echo "Retrieved SHA digest: $DIGEST"
+          echo "IMAGE_REF=$DIGEST" >> $GITHUB_ENV
+
+      - name: Use Provided SHA Directly
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
         run: |
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
           SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
-          echo "Pulling Docker image with SHA: $SHA"
-          OUTPUT=$(docker pull --platform linux/amd64 $REPO@$SHA 2>&1)
-          if echo "$OUTPUT" | grep -q "Pulling from"; then
-            echo "Docker image with SHA $SHA is being pulled."
-            echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
-          else
-            echo "Error: Docker image with SHA $SHA not found."
-            exit 1
-          fi
-
+          echo "Using provided SHA: $SHA"
+          echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
 
       - name: Install kubectl
         run: |
@@ -86,14 +100,12 @@ jobs:
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
   
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Uncomment the following section to deploy to Kubernetes with Helm
-      # - name: Deploy to Kubernetes with Helm
-      #   run: |
-      #     helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
-      #       -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
-      #       --set image.image_ref=${{ env.IMAGE_REF }} \
-      #       -n carat-${{ github.event.inputs.DEPLOY_ENV }}
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
+            -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
+            --set image.image_ref=${{ env.IMAGE_REF }} \
+            -n carat-${{ github.event.inputs.DEPLOY_ENV }}

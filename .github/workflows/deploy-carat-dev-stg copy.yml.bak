@@ -1,5 +1,6 @@
 name: Deploy Carat Dev/Stg to Cluster
-run-name: Deploy ${{ github.event.inputs.DEPLOY_APP}} to ${{ github.event.inputs.DEPLOY_ENV }} (${{github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG}})
+run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.inputs.DEPLOY_ENV }} (${{ github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
+
 on:
   workflow_dispatch:
     inputs:
@@ -20,11 +21,11 @@ on:
           - dev
           - stg
       DOCKER_IMAGE_SHA:
-        description: 'Docker image SHA (optional)'
+        description: 'Docker image Manifest SHA'
         required: false
         default: ''
       DOCKER_IMAGE_TAG:
-        description: 'Docker image reference (optional)'
+        description: 'Docker image Tag'
         required: false
         default: 'latest'
 
@@ -32,12 +33,67 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to environment
+      - name: Install Docker
         run: |
-          echo "Deploying to ${{ github.event.inputs.DEPLOY_ENV }} environment"
-          echo "Deploying application ${{ github.event.inputs.DEPLOY_APP}}"
-          if [ -n "${{ github.event.inputs.DOCKER_IMAGE_SHA }}" ]; then
-            echo "Using Docker image SHA: ${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+          sudo apt-get update
+          sudo apt-get install -y \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository \
+            "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+            $(lsb_release -cs) \
+            stable"
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo systemctl start docker
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Verify Docker image using SHA and trap "Pulling from ..."
+        if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
+        run: |
+          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
+          SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+          echo "Pulling Docker image with SHA: $SHA"
+          OUTPUT=$(docker pull --platform linux/amd64 $REPO@$SHA 2>&1)
+          if echo "$OUTPUT" | grep -q "Pulling from"; then
+            echo "Docker image with SHA $SHA is being pulled."
+            echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
           else
-            echo "No Docker image SHA provided, using default image."
+            echo "Error: Docker image with SHA $SHA not found."
+            exit 1
           fi
+
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+  
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube  # Create the .kube directory if it doesn't exist
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+  
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Uncomment the following section to deploy to Kubernetes with Helm
+      # - name: Deploy to Kubernetes with Helm
+      #   run: |
+      #     helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
+      #       -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
+      #       --set image.image_ref=${{ env.IMAGE_REF }} \
+      #       -n carat-${{ github.event.inputs.DEPLOY_ENV }}
