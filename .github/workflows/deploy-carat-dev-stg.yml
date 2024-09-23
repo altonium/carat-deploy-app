@@ -39,7 +39,7 @@ jobs:
             echo "Error: Both SHA and Tag are empty. Exiting."
             exit 1
           fi
-          
+
       - name: Install Docker
         run: |
           sudo apt-get update
@@ -104,9 +104,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Deploy to Kubernetes with Helm
-      #   run: |
-      #     helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
-      #       -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
-      #       --set image.image_ref=${{ env.IMAGE_REF }} \
-      #       -n carat-${{ github.event.inputs.DEPLOY_ENV }}
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
+            -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
+            --set image.image_ref=${{ env.IMAGE_REF }} \
+            -n carat-${{ github.event.inputs.DEPLOY_ENV }}
