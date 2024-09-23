@@ -1,5 +1,6 @@
 name: Deploy Carat Dev/Stg to Cluster
-run-name: Deploy ${{ github.event.inputs.DEPLOY_APP}} to ${{ github.event.inputs.DEPLOY_ENV }} (${{github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG}})
+run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.inputs.DEPLOY_ENV }} (${{github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
+
 on:
   workflow_dispatch:
     inputs:
@@ -32,12 +33,46 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to environment
+      - name: Install kubectl
         run: |
-          echo "Deploying to ${{ github.event.inputs.DEPLOY_ENV }} environment"
-          echo "Deploying application ${{ github.event.inputs.DEPLOY_APP}}"
+          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Set up kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Verify kubectl connection
+        run: |
+          kubectl get nodes
+
+      - name: Set Docker image reference
+        id: docker-image
+        run: |
           if [ -n "${{ github.event.inputs.DOCKER_IMAGE_SHA }}" ]; then
-            echo "Using Docker image SHA: ${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+            echo "Using provided Docker image SHA: ${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+            echo "IMAGE_REF=${{ github.event.inputs.DOCKER_IMAGE_SHA }}" >> $GITHUB_ENV
           else
-            echo "No Docker image SHA provided, using default image."
+            echo "Fetching Docker image digest for tag: ${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
+            REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}"
+            DIGEST=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+              "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/${{ github.event.inputs.DOCKER_IMAGE_TAG }}" | \
+              jq -r .config.digest)
+            echo "IMAGE_REF=${DIGEST}" >> $GITHUB_ENV
           fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # - name: Deploy to Kubernetes with Helm
+      #   run: |
+      #     helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
+      #       -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
+      #       --set image.image_ref=${{ env.IMAGE_REF }} \
+      #       -n carat-${{ github.event.inputs.DEPLOY_ENV }}

@@ -1,0 +1,43 @@
+name: Deploy Carat Dev/Stg to Cluster
+run-name: Deploy ${{ github.event.inputs.DEPLOY_APP}} to ${{ github.event.inputs.DEPLOY_ENV }} (${{github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG}})
+on:
+  workflow_dispatch:
+    inputs:
+      DEPLOY_APP:
+        description: 'Deployment application'
+        required: true
+        default: 'carat-dash-be'
+        type: choice
+        options:
+          - carat-core
+          - carat-dash-be
+      DEPLOY_ENV:
+        description: 'Deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stg
+      DOCKER_IMAGE_SHA:
+        description: 'Docker image SHA (optional)'
+        required: false
+        default: ''
+      DOCKER_IMAGE_TAG:
+        description: 'Docker image reference (optional)'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to environment
+        run: |
+          echo "Deploying to ${{ github.event.inputs.DEPLOY_ENV }} environment"
+          echo "Deploying application ${{ github.event.inputs.DEPLOY_APP}}"
+          if [ -n "${{ github.event.inputs.DOCKER_IMAGE_SHA }}" ]; then
+            echo "Using Docker image SHA: ${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
+          else
+            echo "No Docker image SHA provided, using default image."
+          fi
