@@ -2,17 +2,16 @@
 namespace: carat-dev
 image:
   # repository: $DOCKER_ACCOUNT/$IMAGE_NAME
-  repository_ref: "altonium/carat-core-dev:latest"
-
+  repository_ref: "altonium/carat-dash-be-dev:latest"
   pullPolicy: Always
 
 service:
-  name: cco-dev
+  name: carat-dash-be-dev
   type: ClusterIP
   port: 80
 
 log:
-  jobname: carat-core-dev
+  jobname: cdb-dev
 
 app:
   port: 3000  # Internal port where NestJS is running

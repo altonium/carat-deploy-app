@@ -11,7 +11,7 @@ service:
   port: 80
 
 log:
-  jobname: carat-core-stg
+  jobname: cco-stg
 
 app:
   port: 3000  # Internal port where NestJS is running
