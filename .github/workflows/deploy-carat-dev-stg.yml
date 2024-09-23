@@ -19,8 +19,8 @@ on:
         options:
           - dev
           - stg
-      DOCKER_IMAGE_SHA:
-        description: 'Docker image SHA (optional)'
+      DOCKER_IMAGE_REF:
+        description: 'Docker image reference (optional)'
         required: false
         default: 'latest'
 
