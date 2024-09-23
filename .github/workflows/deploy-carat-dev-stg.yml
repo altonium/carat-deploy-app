@@ -21,11 +21,11 @@ on:
           - dev
           - stg
       DOCKER_IMAGE_SHA:
-        description: 'Docker image SHA (optional)'
+        description: 'Docker image Manifest SHA'
         required: false
         default: ''
       DOCKER_IMAGE_TAG:
-        description: 'Docker image reference (optional)'
+        description: 'Docker image Tag'
         required: false
         default: 'latest'
 
@@ -53,21 +53,21 @@ jobs:
         run: |
           kubectl get nodes
 
-      - name: Check Docker image SHA validity
+      - name: Check Docker image Manifest SHA validity
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
         run: |
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
           echo "Repository name: $REPO"
           SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
-          # Remove the "sha256:" prefix if present
-          CLEAN_SHA=$(echo "$SHA" | sed 's/^sha256://')
-          echo "CLEAN_SHA: $CLEAN_SHA"
           # Fetching the manifest by SHA to check its validity
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
+          RESPONSE=$(curl -s -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/$CLEAN_SHA")
+            "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/$SHA")
 
-          if [ "$RESPONSE" -ne 200 ]; then
+          echo "Response: $RESPONSE"  # Output the response for debugging
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
             echo "Error: Docker image with SHA $SHA not found in repository $REPO."
             exit 1
           else
@@ -75,12 +75,12 @@ jobs:
             echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
           fi
 
-      - name: Set Docker image reference
+      - name: Set Docker image reference using tag
         id: docker-image
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA == '' }}
         run: |
           echo "Fetching Docker image digest for tag: ${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
-          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}"
+          REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
           DIGEST=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
             "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/${{ github.event.inputs.DOCKER_IMAGE_TAG }}" | \
             jq -r .config.digest)
@@ -89,6 +89,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Uncomment the following section to deploy to Kubernetes with Helm
       # - name: Deploy to Kubernetes with Helm
       #   run: |
       #     helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
