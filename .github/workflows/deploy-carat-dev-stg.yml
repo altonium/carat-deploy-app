@@ -33,6 +33,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
       - name: Install kubectl
         run: |
           curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -49,42 +59,36 @@ jobs:
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      - name: Verify kubectl connection
-        run: |
-          kubectl get nodes
-
-      - name: Check Docker image Manifest SHA validity
+      - name: Verify Docker image using SHA
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA != '' }}
         run: |
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
-          echo "Repository name: $REPO"
           SHA="${{ github.event.inputs.DOCKER_IMAGE_SHA }}"
-          # Fetching the manifest by SHA to check its validity
-          RESPONSE=$(curl -s -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/$SHA")
-
-          echo "Response: $RESPONSE"  # Output the response for debugging
-          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "Error: Docker image with SHA $SHA not found in repository $REPO."
-            exit 1
-          else
+          echo "Checking Docker image with SHA: $SHA"
+          # Verify that the image exists by pulling its manifest
+          if docker manifest inspect $REPO@$SHA > /dev/null; then
             echo "Docker image with SHA $SHA is valid."
             echo "IMAGE_REF=$SHA" >> $GITHUB_ENV
+          else
+            echo "Error: Docker image with SHA $SHA not found."
+            exit 1
           fi
 
-      - name: Set Docker image reference using tag
-        id: docker-image
+      - name: Verify Docker image using tag
         if: ${{ github.event.inputs.DOCKER_IMAGE_SHA == '' }}
         run: |
-          echo "Fetching Docker image digest for tag: ${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
           REPO="altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}"
-          DIGEST=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            "https://registry.hub.docker.com/v2/repositories/$REPO/manifests/${{ github.event.inputs.DOCKER_IMAGE_TAG }}" | \
-            jq -r .config.digest)
-          echo "IMAGE_REF=${DIGEST}" >> $GITHUB_ENV
+          TAG="${{ github.event.inputs.DOCKER_IMAGE_TAG }}"
+          echo "Checking Docker image with tag: $TAG"
+          # Verify that the image exists by pulling its manifest
+          if docker manifest inspect $REPO:$TAG > /dev/null; then
+            DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $REPO:$TAG | sed 's/.*@//')
+            echo "Docker image with tag $TAG is valid."
+            echo "IMAGE_REF=$DIGEST" >> $GITHUB_ENV
+          else
+            echo "Error: Docker image with tag $TAG not found."
+            exit 1
+          fi
 
       - name: Checkout repository
         uses: actions/checkout@v4

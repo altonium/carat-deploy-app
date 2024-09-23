@@ -17,3 +17,13 @@ docker pull altonium/carat-core-stg:latest
 
 docker tag altonium/carat-core-stg:latest altonium/carat-core-prd:latest
 docker push altonium/carat-core-prd:latest
+
+
+docker pull  --platform linux/amd64 altonium/carat-core-dev@sha256:9ef112a96ef45e78100291bd91f319dd33fb1d1197ebdfce38c53935ba516e5a
+
+
+
+
+
+
+curl -u altonium:yourpassword "https://auth.docker.io/token?service=registry.docker.io&scope=repository:yourusername/yourrepo:pull"
