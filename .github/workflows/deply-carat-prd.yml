@@ -1,5 +1,5 @@
 name: Deploy Carat Production
-run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.inputs.DEPLOY_ENV }} (${{ github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
+run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to Production
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
             - carat-core
             - carat-dash-be
       CONFIRMATION:
-        description: 'Type Deploy to confirm'
+        description: 'Type "deploy production" to confirm'
         required: true
         default: ''
 
