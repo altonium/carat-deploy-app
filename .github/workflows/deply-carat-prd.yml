@@ -4,6 +4,14 @@ run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.input
 on:
   workflow_dispatch:
     inputs:
+      DEPLOY_APP:
+        description: 'Deployment application'
+        required: true
+        default: 'carat-dash-be'
+        type: choice
+        options:
+            - carat-core
+            - carat-dash-be
       CONFIRMATION:
         description: 'Type Deploy to confirm'
         required: true
@@ -23,5 +31,62 @@ jobs:
             exit 1
           fi
 
+      - name: Install kubectl
+        run: |
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+    
+      - name: Install Helm
+        run: |
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  
+      - name: Set up kubeconfig
+        run: |
+            mkdir -p $HOME/.kube  # Create the .kube directory if it doesn't exist
+            echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > $HOME/.kube/config
+            chmod 600 $HOME/.kube/config
 
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository \
+            "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+            $(lsb_release -cs) \
+            stable"
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo systemctl start docker
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Get current image reference
+        run: |
+          CURRENT_IMAGE=$(kubectl get deployment ${{ github.event.inputs.DEPLOY_APP }}-stg -n carat-stg -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "CURRENT_IMAGE=$CURRENT_IMAGE" >> $GITHUB_ENV
+          echo "CURRENT_IMAGE=$CURRENT_IMAGE"
+
+      - name: Pull, retag, and push image
+        run: |
+          docker pull ${{ env.CURRENT_IMAGE }}
+          docker tag ${{ env.CURRENT_IMAGE }} altonium/${{ github.event.inputs.DEPLOY_APP }}-prd:latest
+          docker push altonium/${{ github.event.inputs.DEPLOY_APP }}-prd:latest
+          PRD_IMAGE_SHA=$(docker inspect --format='{{index .RepoDigests 0}}' altonium/${{ github.event.inputs.DEPLOY_APP }}-prd:latest)
+          echo "PRD_IMAGE_SHA=$PRD_IMAGE_SHA" >> $GITHUB_ENV
+          echo "PRD_IMAGE_SHA=$PRD_IMAGE_SHA"
+
+    #   - name: Deploy to Kubernetes with Helm
+    #     run: |
+    #       helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-prd ./ \
+    #         -f ${{ github.event.inputs.DEPLOY_APP }}/values-prd.yaml \
+    #         --set image.repository_ref=altonium/${{ github.event.inputs.DEPLOY_APP }}-prd@${{ env.IMAGE_REF }} \
+    #         -n carat-prd
 
