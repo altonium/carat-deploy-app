@@ -6,12 +6,12 @@ image:
   pullPolicy: Always
 
 service:
-  name: cdb-stg
+  name: carat-dash-be-stg
   type: ClusterIP
   port: 80
 
 log:
-  jobname: carat-dash-be-stg
+  jobname: cdb-stg
 
 app:
   port: 3000  # Internal port where NestJS is running

@@ -1,4 +1,4 @@
-name: Deploy Carat Dev/Stg to Cluster
+name: Deploy Carat Production
 run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.inputs.DEPLOY_ENV }} (${{ github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
 
 on:

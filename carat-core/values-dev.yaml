@@ -7,12 +7,12 @@ image:
   pullPolicy: Always
 
 service:
-  name: cco-dev
+  name: carat-core-dev
   type: ClusterIP
   port: 80
 
 log:
-  jobname: carat-core-dev
+  jobname: cco-dev
 
 app:
   port: 3000  # Internal port where NestJS is running
