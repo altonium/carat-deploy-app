@@ -83,10 +83,10 @@ jobs:
           echo "PRD_IMAGE_SHA=$PRD_IMAGE_SHA" >> $GITHUB_ENV
           echo "PRD_IMAGE_SHA=$PRD_IMAGE_SHA"
 
-    #   - name: Deploy to Kubernetes with Helm
-    #     run: |
-    #       helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-prd ./ \
-    #         -f ${{ github.event.inputs.DEPLOY_APP }}/values-prd.yaml \
-    #         --set image.repository_ref=altonium/${{ github.event.inputs.DEPLOY_APP }}-prd@${{ env.IMAGE_REF }} \
-    #         -n carat-prd
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-prd ./ \
+            -f ${{ github.event.inputs.DEPLOY_APP }}/values-prd.yaml \
+            --set image.repository_ref=${{ env.PRD_IMAGE_SHA }} \
+            -n carat-prd
 
