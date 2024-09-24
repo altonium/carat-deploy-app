@@ -1,25 +1,9 @@
-name: Deploy Carat Dev/Stg to Cluster
-run-name: Deploy ${{ github.event.inputs.DEPLOY_APP }} to ${{ github.event.inputs.DEPLOY_ENV }} (${{ github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
+name: Deploy Carat Prd to Cluster
+run-name: Deploy Carat Production from Staging: (${{ github.event.inputs.DOCKER_IMAGE_SHA || github.event.inputs.DOCKER_IMAGE_TAG }})
 
 on:
   workflow_dispatch:
     inputs:
-      DEPLOY_APP:
-        description: 'Deployment application'
-        required: true
-        default: 'carat-dash-be'
-        type: choice
-        options:
-          - carat-core
-          - carat-dash-be
-      DEPLOY_ENV:
-        description: 'Deployment environment'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - stg
       DOCKER_IMAGE_SHA:
         description: 'Docker image Manifest SHA'
         required: false
