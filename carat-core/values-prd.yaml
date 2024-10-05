@@ -29,9 +29,11 @@ env:
 
   REDIS_HOST: "10.8.200.182"
   REDIS_PORT: "6379"
+  REDIS_PREFIX: "ccop"
 
   REDIS2_HOST: "10.8.200.182"
   REDIS2_PORT: "6379"
+  APP_ENV: "prd"
 
 secretName: carat-prd-secrets
 

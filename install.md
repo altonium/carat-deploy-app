@@ -1,6 +1,8 @@
 helm install carat-core-dev ./ -n carat-dev \
   --set image.repository=mydockeruser/myapp
 
+  
+export KUBECONFIG=/Users/diablo/Library/CloudStorage/Dropbox/ssh-keys/kube/carat/kubeconfig.yml
 
 
 
