@@ -110,6 +110,26 @@ spec:
             secretKeyRef:
               name: {{ .Values.secretName }}
               key: HASH_SALT
+        - name: NETZME_PARTNER_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: NETZME_PARTNER_ID
+        - name: NETZME_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: NETZME_PRIVATE_KEY
+        - name: NETZME_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName }}
+              key: NETZME_CLIENT_SECRET
+        - name: NETZME_CALLBACK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secretName}}
+              key: NETZME_CALLBACK_TOKEN
 
       - name: promtail
         image: grafana/promtail:2.8.0
