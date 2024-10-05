@@ -33,6 +33,17 @@ spec:
         - name: logs
           mountPath: /app/logs   # NestJS writes logs to /app/logs
         env:
+        - name: NETZ_MERCHANT_DAILY_LIMIT_IDRM
+          value: "{{ .Values.env.NETZ_MERCHANT_DAILY_LIMIT_IDRM }}"
+        - name: NETZ_MERCHANT_MONTHLY_LIMIT_IDRM
+          value: "{{ .Values.env.NETZ_MERCHANT_MONTHLY_LIMIT_IDRM }}"
+        - name: NETZ_MERCHANT_ANNUAL_LIMIT_IDRM
+          value: "{{ .Values.env.NETZ_MERCHANT_ANNUAL_LIMIT_IDRM }}"
+        - name: MOCK_DATA
+          value: "{{ .Values.env.MOCK_DATA }}"
+        - name: MOCK_NETZME_BASE_URL
+          value: "{{ .Values.env.MOCK_NETZME_BASE_URL }}"
+
         - name: DATABASE_HOST
           value: "{{ .Values.env.DATABASE_HOST }}"
         - name: DATABASE_PORT

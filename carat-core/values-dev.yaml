@@ -37,6 +37,12 @@ env:
   APP_ENV: "dev"
 
 
+  NETZ_MERCHANT_DAILY_LIMIT_IDRM: "38000000"
+  NETZ_MERCHANT_MONTHLY_LIMIT_IDRM: "1000000000"
+  NETZ_MERCHANT_ANNUAL_LIMIT_IDRM: "3800000000"
+
+  MOCK_DATA: true
+  MOCK_NETZME_BASE_URL: http://carat.midaseight.net/netzme
 
 secretName: carat-dev-secrets
 
