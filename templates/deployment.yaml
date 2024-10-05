@@ -80,6 +80,8 @@ spec:
           value: "{{ .Values.env.NETZ_MERCHANT_MONTHLY_LIMIT_IDRM | default "1000" }}"
         - name: NETZ_MERCHANT_ANNUAL_LIMIT_IDRK
           value: "{{ .Values.env.NETZ_MERCHANT_ANNUAL_LIMIT_IDRM | default "3800" }}"
+        - name: NETZME_BASE_URL
+          value: "{{ .Values.env.NETZME_BASE_URL }}"
         - name: INT_ADMIN_SECRET
           valueFrom:
             secretKeyRef:
