@@ -38,7 +38,7 @@ env:
   NETZ_MERCHANT_DAILY_LIMIT_IDRM: 38
   NETZ_MERCHANT_MONTHLY_LIMIT_IDRM: 1000
   NETZ_MERCHANT_ANNUAL_LIMIT_IDRM: 3800
-  NETZME_BASE_URL: "https://tokoapisnap-stg.netzme.com"
+  NETZME_BASE_URL: "https://tokoapisnap.netzme.com"
 
   MOCK_DATA: false
   MOCK_NETZME_BASE_URL: http://carat.midaseight.net/netzme
