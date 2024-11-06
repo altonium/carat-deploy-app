@@ -10,6 +10,9 @@ service:
   type: ClusterIP
   port: 80
 
+spec:
+  replicas: 1
+
 log:
   jobname: cdb-dev
 
