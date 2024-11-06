@@ -29,3 +29,10 @@ docker pull  --platform linux/amd64 altonium/carat-core-dev@sha256:9ef112a96ef45
 
 
 curl -u altonium:yourpassword "https://auth.docker.io/token?service=registry.docker.io&scope=repository:yourusername/yourrepo:pull"
+ 
+
+helm list -n <namespace>
+ helm history <release-name> -n <namespace>
+ helm history carat-core-stg -n carat-stg
+ helm rollback <release-name> <revision-number> -n <namespace>
+ helm rollback carat-core-stg 19 -n carat-stg

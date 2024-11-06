@@ -10,6 +10,9 @@ service:
   type: ClusterIP
   port: 80
 
+spec:
+  replicas: 3
+
 log:
   jobname: cco-prd
 
