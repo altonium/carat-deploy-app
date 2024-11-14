@@ -1,0 +1,53 @@
+# values.yaml
+namespace: carat-dev
+image:
+  # repository: $DOCKER_ACCOUNT/$IMAGE_NAME
+  repository_ref: "altonium/carat-services-dev:latest"
+
+  pullPolicy: Always
+
+service:
+  name: carat-services-dev
+  type: ClusterIP
+  port: 80
+
+spec:
+  replicas: 1
+
+log:
+  jobname: csc-dev
+
+app:
+  port: 3000  # Internal port where NestJS is running
+
+env:
+  DATABASE_HOST: "10.8.200.181"
+  DATABASE_PORT: "5432"
+  DATABASE_USER: "kilua"
+  DATABASE_NAME: "carat-dev"
+
+  DATABASE2_HOST: "10.8.200.181"
+  DATABASE2_PORT: "5432"
+  DATABASE2_USER: "kilua"
+  DATABASE2_NAME: "carat-dev"
+
+  REDIS_HOST: "10.8.200.182"
+  REDIS_PORT: "6379"
+  REDIS_PREFIX: "cscd"
+
+  REDIS2_HOST: "10.8.200.182"
+  REDIS2_PORT: "6379"
+  APP_ENV: "dev"
+
+
+  NETZ_MERCHANT_DAILY_LIMIT_IDRM: 38
+  NETZ_MERCHANT_MONTHLY_LIMIT_IDRM: 1000
+  NETZ_MERCHANT_ANNUAL_LIMIT_IDRM: 3800
+  NETZME_BASE_URL: "https://tokoapisnap-stg.netzme.com"
+
+  MOCK_DATA: true
+  MOCK_NETZME_BASE_URL: http://carat.midaseight.net/netzme
+
+secretName: carat-dev-secrets
+
+resources: {}

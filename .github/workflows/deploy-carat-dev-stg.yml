@@ -12,6 +12,7 @@ on:
         options:
           - carat-core
           - carat-dash-be
+          - carat-services
       DEPLOY_ENV:
         description: 'Deployment environment'
         required: true

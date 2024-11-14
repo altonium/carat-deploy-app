@@ -12,6 +12,7 @@ on:
         options:
             - carat-core
             - carat-dash-be
+            - carat-services
       CONFIRMATION:
         description: 'Type "deploy production" to confirm'
         required: true

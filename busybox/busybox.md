@@ -1,0 +1,1 @@
+kubectl apply -f busybox.yaml -n carat-dev
