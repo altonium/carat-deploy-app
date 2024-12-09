@@ -15,6 +15,8 @@ spec:
     spec:
       imagePullSecrets:
       - name: regcred  # Reference the secret created above
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- else }}
       initContainers:
       - name: init-permissions
         image: docker.io/alpine:latest
@@ -24,6 +26,7 @@ spec:
         volumeMounts:
           - name: logs
             mountPath: /app/logs
+      {{- end }}
       containers:
       - name: {{ .Values.service.name }}
         image: "{{ .Values.image.repository_ref }}"
@@ -130,11 +133,11 @@ spec:
         - name: NETZME_CALLBACK_TOKEN
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.secretName}}
+              name: {{ .Values.secretName }}
               key: NETZME_CALLBACK_TOKEN
 
-      {{- if not (eq .Values.service.name "carat-core-dev") }}
-
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- else }}
 
       - name: promtail
         image: grafana/promtail:2.8.0
@@ -170,9 +173,12 @@ spec:
       volumes:
       - name: logs
         emptyDir: {}                 # Shared volume for logs between NestJS, Promtail, and Logrotate
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- else }}
       - name: {{ .Values.service.name }}-promptail-config
         configMap:
           name: {{ .Values.service.name }}-promptail-config    # ConfigMap for Promtail config
       - name: {{ .Values.service.name }}-logrotate-config
         configMap:
           name: {{ .Values.service.name }}-logrotate-config    # ConfigMap for Logrotate config
+      {{- end }}
