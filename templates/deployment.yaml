@@ -133,6 +133,9 @@ spec:
               name: {{ .Values.secretName}}
               key: NETZME_CALLBACK_TOKEN
 
+      {{- if not (eq .Values.service.name "carat-core-dev") }}
+
+
       - name: promtail
         image: grafana/promtail:2.8.0
         args:
@@ -161,6 +164,9 @@ spec:
             mountPath: /app/logs  # Logrotate works on the same log files
           - name: {{ .Values.service.name }}-logrotate-config
             mountPath: /etc/logrotate.d/
+
+      {{- end }}
+
       volumes:
       - name: logs
         emptyDir: {}                 # Shared volume for logs between NestJS, Promtail, and Logrotate
