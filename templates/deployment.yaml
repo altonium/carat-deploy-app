@@ -15,7 +15,7 @@ spec:
     spec:
       imagePullSecrets:
       - name: regcred  # Reference the secret created above
-      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "(-dev|-stg)$" .Values.service.name) }}
       {{- else }}
       initContainers:
       - name: init-permissions
@@ -139,7 +139,7 @@ spec:
         - name: PROMTAIL_JOB_LABEL
           value: "{{ .Values.log.jobname }}"
 
-      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "(-dev|-stg)$" .Values.service.name) }}
       {{- else }}
 
       - name: promtail
@@ -176,7 +176,7 @@ spec:
       volumes:
       - name: logs
         emptyDir: {}                 # Shared volume for logs between NestJS, Promtail, and Logrotate
-      {{- if and (eq .Values.deploy_version "v2") (regexMatch "-dev$" .Values.service.name) }}
+      {{- if and (eq .Values.deploy_version "v2") (regexMatch "(-dev|-stg)$" .Values.service.name) }}
       {{- else }}
       - name: {{ .Values.service.name }}-promptail-config
         configMap:
