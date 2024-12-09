@@ -1,5 +1,12 @@
 # Install Notes
 
+To test rendering the helm template, use commands like this:
+
+```bash
+helm template carat-core-dev ./ -f carat-core/values-dev.yaml -n carat-dev
+helm template carat-core-dev ./ -f carat-core/values-dev.yaml -n carat-dev --set deploy_version=v2
+```
+
 Basically, to deploy using helm, use commands like this:
 
 ```bash
