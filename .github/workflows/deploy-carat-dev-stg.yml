@@ -13,6 +13,14 @@ on:
           - carat-core
           - carat-dash-be
           - carat-services
+      DEPLOY_VERSION:
+        description: 'Deployment version'
+        required: true
+        default: 'v1'
+        type: choice
+        options:
+          - v1
+          - v2
       DEPLOY_ENV:
         description: 'Deployment environment'
         required: true
@@ -110,4 +118,5 @@ jobs:
           helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }} ./ \
             -f ${{ github.event.inputs.DEPLOY_APP }}/values-${{ github.event.inputs.DEPLOY_ENV }}.yaml \
             --set image.repository_ref=altonium/${{ github.event.inputs.DEPLOY_APP }}-${{ github.event.inputs.DEPLOY_ENV }}@${{ env.IMAGE_REF }} \
+            --set deploy_version=${{ github.event.inputs.DEPLOY_VERSION }} \
             -n carat-${{ github.event.inputs.DEPLOY_ENV }}
