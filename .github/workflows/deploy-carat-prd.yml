@@ -89,5 +89,6 @@ jobs:
           helm upgrade --install ${{ github.event.inputs.DEPLOY_APP }}-prd ./ \
             -f ${{ github.event.inputs.DEPLOY_APP }}/values-prd.yaml \
             --set image.repository_ref=${{ env.PRD_IMAGE_SHA }} \
+            --set deploy_version=v2 \
             -n carat-prd
 
