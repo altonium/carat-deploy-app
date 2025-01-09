@@ -139,6 +139,10 @@ spec:
           value: "{{ .Values.env.CARAT_DISBURSE_HOST | default "10.8.3.146" }}"
         - name: CARAT_DISBURSE_PORT
           value: "{{ .Values.env.CARAT_DISBURSE_PORT | default "3500" }}" 
+        - name: CARAT_SIGNER_HOST
+          value: "{{ .Values.env.CARAT_SIGNER_HOST | default "10.8.3.146" }}"
+        - name: CARAT_SIGNER_PORT
+          value: "{{ .Values.env.CARAT_SIGNER_PORT | default "4500" }}"
 
         - name: PROMTAIL_JOB_LABEL
           value: "{{ .Values.log.jobname }}"
