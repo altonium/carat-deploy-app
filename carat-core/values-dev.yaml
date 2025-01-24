@@ -52,7 +52,7 @@ env:
   NETZME_BASE_URL: "https://tokoapisnap-stg.netzme.com"
 
   MOCK_DATA: true
-  MOCK_NETZME_BASE_URL: http://carat.midaseight.net/netzme
+  MOCK_NETZME_BASE_URL: http://carat.wp68.uk/netzme
 
 secretName: carat-dev-secrets
 
